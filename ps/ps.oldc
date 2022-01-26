@@ -1,0 +1,289 @@
+/* ps commnad */
+/* memo: base font color white */
+
+esc(code)
+  char code[];{
+  printf("%c[%s", 033, code);
+}
+
+main(){
+  extern printf, exit;
+  extern actcnt, waicnt, zomcnt; /* p.stat counter */
+  int bactcnt, bwaicnt, bzomcnt, cntf;/* b*:backup, cntf: other:changem, 0:unchange */
+  int i, oldslot, updslot;/* i:while index, oldslot:backup reverse slot*/
+  int chflag, initf;/* chflag:data change flag, initf:init print flag, slotf:update old slot */
+  int sloupf, bmpid;/* slot number print flag(old or current) */
+
+  /* process status*/
+  /* 0: unused or free*/
+  /* 1: active*/
+  /* 2: witinf for a process die*/
+  /* 3: zombie*/
+
+  /* kernel data vector */
+  char uuno[1];    /* u.uno:1byte */
+  int dska[16];    /* dska:16word    */
+  int ppid[16];    /* p.pid:16word   */
+  int pppid[16];   /* p.ppid:16word */
+  char pstat[16];  /* p.stat:16byte */
+  int mpid[1]; /* 1 word */
+
+  /* data backup vector */
+  int bppid[16];
+  int bpppid[16];
+  char bpstat[16];
+  int bdska[16];
+
+  /* address set */
+  pstat=024156;
+  uuno=037775;
+  ppid=023736;
+  pppid=024036;
+  dska=023776;
+  mpid=025242;
+
+  /* flag init */
+  initf=0;
+  sloupf=0;
+  updslot=0;
+  
+  esc("2J");      /* clear screen */
+  esc("H");       /* cursor reset */
+
+    /* print title */
+  esc("30m");  /* font color black */
+  esc("47m");  /* back color white */
+  esc("K");
+  printf("SLOT\tPID\tPPID\tSTAT\tSWP-BK\#\tCMD");
+  while(1){
+    esc("?25l");/* cursor disable */
+    esc("0m"); /* init reset color */
+    printf("\n");
+
+    i = 0;
+    while(i<16){
+
+      /* update branch */
+      if (initf==1){
+        if(ppid[i] != bppid[i]){
+          chflag=1;
+        } else if (pppid[i] != bpppid[i]){
+          chflag=1;
+        } else if (pstat[i] != bpstat[i]){
+          chflag=1;
+        } else if (*mpid != bmpid){/* slot numbre update */
+          chflag=1;
+        } else if (sloupf==1){/* old slot update(white color) */
+          chflag=1;
+        }
+      } else {
+        chflag=1;  /* init only */
+        cntf++;
+      }
+
+
+
+
+
+      /* line data update */
+      if(chflag==1){
+        esc("2K");  /* line del */
+
+
+/* --------------------------------------------------------------------------------------- */
+/* slot update control */
+/* updslot: set old reverse slot number.need white color update */
+        
+        
+        /* old slot update white color */
+        if(sloupf==1){
+          if(i==updslot){
+            esc("0m");/* reset */
+            esc("37m");/* font color white */
+            sloupf=0;
+          }
+        }
+
+        if(*mpid == ppid[i]){
+            if(pstat[i] == 1){  /* active */
+              if(oldslot != i){
+                updslot=oldslot;
+                sloupf=1;
+              }
+              esc("7m");/* color reverse */
+              oldslot=i;/* record reverse slot update*/
+            }            
+        } else {
+          esc("37m");               /* font color white */
+
+        }
+
+        printf("%d\t", i + 1);    /* slot   */
+        esc("0m");                /* color reset*/
+/* ----------------------------------------------------------------------------------------- */
+      
+
+        esc("37m");               /* font color reset */
+      
+        pidcol(pstat[i]);
+        bpstat[i] = pstat[i];
+        bppid[i] = ppid[i];
+        printf("%d\t", ppid[i]);  /* p.pid  */
+
+        esc("0m");                /* color reset*/
+        esc("37m");               /* font color reset */
+        bpppid[i] = pppid[i];
+        printf("%d\t", pppid[i]); /* p.ppid */
+        getstat(pstat[i]);        /* p.stat */
+        printf("%d\t", dska[i]);  /* p.dska */
+        getcom(ppid[i], ppid[*uuno - 1]);
+        printf("\n");
+      } else {
+        printf("\n");
+        bpstat[i] = pstat[i];
+      }
+      statcnt(pstat[i]);
+
+      /* data backup */
+
+
+
+
+      chflag=0;
+      sloupf=0;
+
+      i++;
+
+    }
+    initf=1;/* init finish */
+
+    printf("\n");
+    /* statistics */
+    if(bactcnt!=actcnt){
+        cntf++;
+    } else if (bwaicnt!=waicnt){
+        cntf++;
+    } else if (bzomcnt!=zomcnt){
+        cntf++;
+    }
+
+    if(cntf!=0){
+    esc("30m");  /* font col: black */
+    esc("47m");  /* back color white */
+    esc("K");
+    printf("MPID: %d\t", *mpid);
+    printf("NPROC: %d (act: %d wait: %d zmb: %d)", actcnt+waicnt+zomcnt, actcnt, waicnt, zomcnt);
+    esc("0m");   /* base color reset */
+    cntf=0;
+    } else {
+        printf("\n");
+    }
+    /* backup routine */
+    bactcnt=actcnt;
+    bwaicnt=waicnt;
+    bzomcnt=zomcnt;
+    actcnt=0;
+    waicnt=0;
+    zomcnt=0;
+
+    bmpid=mpid[0];
+    esc("0m"); 
+    esc("H");    /* curser reset */
+  }
+  exit(0);
+}
+
+getcom(ppidd, pspid)
+int ppidd;
+char pspid;
+{
+  if(ppidd == 1){
+    printf("init\t");
+  }else if(pspid == ppidd){
+    printf("ps\t");
+  } else {
+    printf("*\t");
+  }
+}
+
+pidcol(statd)
+char statd;
+{
+  switch(statd){
+    case 0: /* unused */
+      break;
+    case 1: /* active */
+      esc("41m"); /* back color:red */
+      esc("1m");  /* font bold */
+      break;
+    case 2: /* wait */
+      esc("44m"); /* back color:blue */
+      break;
+    case 3:  /* zombie */
+      esc("43m"); /* back color :yellow */
+      esc("30m"); /* font col: black */
+      break;
+    default:  /* error */
+      printf("error\t");
+      break;
+  }
+}
+
+statcnt(statd)
+char statd;
+{
+  extern actcnt, waicnt, zomcnt; /* p.stat counter */
+  switch(statd){
+    case 1:
+      actcnt++;
+      break;
+    case 2:
+      waicnt++;
+      break;
+    case 3:
+      zomcnt++;
+      break;
+    default:
+      break;
+  }
+}
+
+getstat(statd)
+char statd;
+{
+  extern actcnt, waicnt, zomcnt; /* p.stat counter */
+  switch(statd){
+    case 0:
+      esc("0m");
+      esc("37m");
+      printf("unused\t");
+      break;
+    case 1:
+      esc("41m");  /* back color red */
+      esc("37m");  /* font color white */
+      actcnt++;
+      printf("active\t");
+      break;
+    case 2:
+      esc("44m"); /* back color:blue */
+      waicnt++;
+      printf("wait  \t");
+      break;
+    case 3:
+      esc("43m"); /* back color :yellow */
+      esc("30m"); /* font col: black */
+      zomcnt++;
+      printf("zombie\t");
+      break;
+    default:
+      printf("error\t");
+      break;
+  }
+  esc("0m");  /* color reset */
+  esc("37m"); /* font color reset*/
+}
+
+actcnt 0;
+waicnt 0;
+zomcnt 0;
+

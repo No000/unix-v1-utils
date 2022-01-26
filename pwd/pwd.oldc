@@ -1,0 +1,136 @@
+main(){
+  extern stab, direnbuf, pwdstr, dirupcnt, stroff;
+  extern printf, exit, chdir;
+  char stab[], dienbuf[], pwdstr[];
+  int error, i, j, rootflg, tescnt;
+  error = 0;
+  i = 0;
+  j = 0;
+  rootflg = 0;
+
+  while(1){
+    /* dir entry, dot inode compare */
+    getnam();
+
+    /* root check */
+    rootflg = rootchk();
+    if(rootflg == 1) {
+      printf("stat error");
+    } else if(rootflg == 2) {
+        break;
+    }
+    error = chdir("..");
+    /* after root check */
+    dirupcnt++;
+  }
+
+  pwdstr= pwdstr + stroff - 16;
+  i=0;
+  
+  printf("/");
+  while(j<dirupcnt){
+    while(i<8){
+      printf("%c", pwdstr[i]);
+      i++;
+    }
+    i=0;
+    if(j<(dirupcnt - 1)){
+      printf("/");  
+    }
+    pwdstr=-8;
+    j++;
+  }
+  printf("\n");
+
+  /* printf("dirup cnt: %d\n", dirupcnt); */
+  /* printf("str off: %d\n", stroff); */
+
+  if (error){
+      printf("chdir error");
+  }
+
+
+/*   if (stab[0] == direnbuf[0]){
+    printf("success\n");
+  }else{
+    printf("false");
+  } */
+
+  exit(0);
+}
+
+/* rootchk:root cheack func */
+/* return */
+/* 0:not root */
+/* 1:error */
+/* 2:now root */
+rootchk() {
+  extern dotb, dotdotb;
+  extern stat;
+  char dotb[], dotdotb[];
+  int error;
+  error = 0;
+  error = stat(".", dotb);
+  error = stat("..", dotdotb);
+  if (error) {
+    return(1);
+  }
+  if (dotb[0] == dotdotb[0]){
+    return(2);
+  }
+  return(0);
+}
+
+getnam() {
+  extern stab, direnbuf, pwdstr, dirupcnt, stroff;
+  extern open, read, close, printf, stat;
+  char stab[], direnbuf[], pwdstr[];
+  int error, fd, i, j, off;
+
+   /* dot i-node check */
+  error = stat(".", stab);
+  if (error){
+    printf("stat error\n");
+  }
+  
+  /* dotdot dir i-node check */
+  fd = open("..", 0);
+  error = read(fd, direnbuf, 520);
+  if (0 > error){
+    printf("read error");
+  }
+  close(fd);
+
+  /* search current dir name */
+  i = 0;
+  j = 0;
+  while(i < 521){
+    /* i = dot dir name in dir entry(byte) */
+    if(stab[0] == direnbuf[i]){
+      /* printf("1 successs\n"); */
+      /* dirupcnt++; */     /* directry up count */
+      i=+2;/* i-node 1byte after  */
+      break;
+    }
+    i++;
+  }
+
+  /* stroff:base */
+  /* j: index */
+  while(j < 8){
+    pwdstr[stroff+j] = direnbuf[i];
+    i++;
+    j++;
+  }
+  stroff=+8;
+  return;
+}
+
+stroff 0;       /* pwd string offset */
+dirupcnt 0;     /* up directory count(include root dir) */
+dotb[34];       /* dot stat buf */
+dotdotb[34];     /* dotdot stat buf */
+stab[34];       /* stat buf */
+direnbuf[520];  /* dir open buf */
+pwdstr[50];    /* pwd string buff */
+
