@@ -140,13 +140,13 @@ fini:/* arg parse finish label */
         
 
         if(*mpid == ppid[i]){
-            if(pstat[i] == 1){  /* active */
-              if(oldslot != i){
-                updslot=oldslot;
-              }
-              esc("7m", escf);/* color reverse */
-              oldslot=i;/* record reverse slot update*/
-            }            
+          if(pstat[i] == 1){  /* active */
+            if(oldslot != i){
+              updslot=oldslot;
+            }
+            esc("7m", escf);/* color reverse */
+            oldslot=i;/* record reverse slot update*/
+          }            
         }
 
         
@@ -193,23 +193,23 @@ fini:/* arg parse finish label */
     printf("\n");
     /* statistics */
     if(bactcnt!=actcnt){
-        cntf++;
+      cntf++;
     } else if (bwaicnt!=waicnt){
-        cntf++;
+      cntf++;
     } else if (bzomcnt!=zomcnt){
-        cntf++;
+      cntf++;
     }
 
     if(cntf!=0){
-    esc("30m", escf);  /* font col: black */
-    esc("47m", escf);  /* back color white */
-    esc("K", 0);/* kill line */
-    printf("MPID: %d\t", *mpid);
-    printf("NPROC: %d (act: %d wait: %d zmb: %d)", actcnt+waicnt+zomcnt, actcnt, waicnt, zomcnt);
-    esc("0m", escf);   /* base color reset */
-    cntf=0;
-    } else {
-        printf("\n");
+      esc("30m", escf);  /* font col: black */
+      esc("47m", escf);  /* back color white */
+      esc("K", 0);/* kill line */
+      printf("MPID: %d\t", *mpid);
+      printf("NPROC: %d (act: %d wait: %d zmb: %d)", actcnt+waicnt+zomcnt, actcnt, waicnt, zomcnt);
+      esc("0m", escf);   /* base color reset */
+      cntf=0;
+    }else{
+      printf("\n");
     }
     if(repf==0){
       break;
