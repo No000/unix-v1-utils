@@ -1,0 +1,41 @@
+/* reset command */
+
+main(){
+  showcu();
+  rcol();
+  clear();
+  rcur();
+  return;
+}
+
+clear(){
+  extern esc;
+  esc("2J");
+}
+
+rcur(){
+  extern esc;
+  esc("H");
+}
+
+/* show cursor */
+showcu(){
+  extern esc;
+  esc("?25h");
+}
+
+/* reset color */
+rcol(){
+  extern esc;
+  esc("0m");
+}
+
+/* esc */
+/* code:escape sequences code */
+esc(code)
+char code[];
+{
+  extern printf;
+  printf("%c[%s", 033, code);
+}
+
