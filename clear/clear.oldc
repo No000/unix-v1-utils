@@ -1,0 +1,30 @@
+/* clear command */
+
+main(){
+  extern clear, rcur;
+  clear();
+  rcur();
+  return;
+}
+
+/* clear:screen clear */
+clear(){
+  extern esc;
+  esc("2J");
+}
+
+/* rcursor: reset curosor */
+rcur(){
+  extern esc;
+  esc("H");
+}
+
+/* esc */
+/* code:escape sequences code */
+esc(code)
+char code[];
+{
+  extern printf;
+  printf("%c[%s", 033, code);
+}
+
