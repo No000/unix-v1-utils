@@ -1,4 +1,4 @@
-[English](.README.md) | 日本語
+[English](./README.md) | 日本語
 
 # unix-v1-utils
 このソフトウェアは、Research UNIX version 1 kernelを分析するためのツールです。
