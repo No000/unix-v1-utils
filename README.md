@@ -10,5 +10,5 @@ This software needs to be compiled using the Very early C compiler(last1120c) th
 This software depends on escape sequences used in modern terminals.Therefore, Research UNIX version 1 kernel must  run in the simulator in modern terminal.(e.g. SIMH)
 
 # License
-Please refer to LICENSE.txt.
+Please refer to LICENSE.
 
